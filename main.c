@@ -24,10 +24,14 @@ void UpdateDrawFrame(void);
 struct nk_context* ctx;
 struct nk_console* console;
 
-#define MAX_TODOS    32
+#define MAX_TODOS 32
 #define TODO_TEXT_LEN 256
 
-typedef enum { FILTER_ALL = 0, FILTER_ACTIVE, FILTER_COMPLETED } TodoFilter;
+typedef enum {
+    FILTER_ALL = 0,
+    FILTER_ACTIVE,
+    FILTER_COMPLETED
+} TodoFilter;
 
 typedef struct {
     char    text[TODO_TEXT_LEN];
@@ -114,7 +118,8 @@ static void update_visibility(void) {
 }
 
 static void on_todo_changed(nk_console* widget, void* user_data) {
-    (void)widget; (void)user_data;
+    NK_UNUSED(widget);
+    NK_UNUSED(user_data);
     update_visibility();
 }
 
@@ -131,13 +136,15 @@ static void on_add_todo(nk_console* btn, void* user_data) {
 }
 
 static void on_filter_changed(nk_console* widget, void* user_data) {
-    (void)widget; (void)user_data;
+    NK_UNUSED(widget);
+    NK_UNUSED(user_data);
     current_filter = (TodoFilter)filter_selected;
     update_visibility();
 }
 
 static void on_clear_completed(nk_console* btn, void* user_data) {
-    (void)btn; (void)user_data;
+    NK_UNUSED(btn);
+    NK_UNUSED(user_data);
     int new_count = 0;
     for (int i = 0; i < todo_count; i++) {
         if (!todos[i].completed) {

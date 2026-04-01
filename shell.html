@@ -10,8 +10,8 @@
     <style>
         html, body  {
             margin: 0;
-            height: 100vh;
-            max-width: 100vw;
+            height: 800vh;
+            max-width: 600vw;
         }
         body {
             display: flex;
@@ -38,13 +38,8 @@
         window.Module = {
             canvas: document.getElementById('canvas'),
             print: (...args) => {
-                const consoleElement = document.getElementById('console')
                 const text = args.join(' ')
                 console.log(text);
-                if (consoleElement) {
-                  consoleElement.innerText += text + "\n"
-                  consoleElement.scrollTop = consoleElement.scrollHeight
-                }
             }
         }
     </script>
