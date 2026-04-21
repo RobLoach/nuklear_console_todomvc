@@ -27,6 +27,7 @@ struct nk_console* console;
 
 #define MAX_TODOS 32
 #define TODO_TEXT_LEN 256
+#define TODO_MD_FILE "TODO.md"
 
 typedef enum {
     FILTER_ALL = 0,
@@ -95,7 +96,6 @@ static void demo_set_style(struct nk_context* ctx) {
     table[NK_COLOR_KNOB_CURSOR_ACTIVE] = table[NK_COLOR_SLIDER_CURSOR_ACTIVE];
     nk_style_from_table(ctx, table);
 }
-#define TODO_MD_FILE "TODO.md"
 
 static void save_todos(void) {
     FILE* f = fopen(TODO_MD_FILE, "w");
@@ -121,8 +121,9 @@ static void load_todos(void) {
         size_t len = strlen(text);
         while (len > 0 && (text[len - 1] == '\n' || text[len - 1] == '\r')) len--;
         if (len == 0) continue;
+        text[len] = '\0';
         strncpy(todos[todo_count].text, text, TODO_TEXT_LEN - 1);
-        todos[todo_count].text[len < TODO_TEXT_LEN ? len : TODO_TEXT_LEN - 1] = '\0';
+        todos[todo_count].text[TODO_TEXT_LEN - 1] = '\0';
         todo_count++;
     }
     fclose(f);
