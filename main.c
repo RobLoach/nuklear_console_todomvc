@@ -2,6 +2,7 @@
 #include <emscripten/emscripten.h>
 #endif
 
+#include <stdio.h>
 #include <string.h>
 
 #include "raylib.h"
@@ -26,6 +27,7 @@ struct nk_console* console;
 
 #define MAX_TODOS 32
 #define TODO_TEXT_LEN 256
+#define TODO_MD_FILE "TODO.md"
 
 typedef enum {
     FILTER_ALL = 0,
@@ -94,6 +96,39 @@ static void demo_set_style(struct nk_context* ctx) {
     table[NK_COLOR_KNOB_CURSOR_ACTIVE] = table[NK_COLOR_SLIDER_CURSOR_ACTIVE];
     nk_style_from_table(ctx, table);
 }
+
+static void save_todos(void) {
+    FILE* f = fopen(TODO_MD_FILE, "w");
+    if (!f) return;
+    for (int i = 0; i < todo_count; i++) {
+        fprintf(f, "- [%c] %s\n", todos[i].completed ? 'x' : ' ', todos[i].text);
+    }
+    fclose(f);
+}
+
+static void load_todos(void) {
+    FILE* f = fopen(TODO_MD_FILE, "r");
+    if (!f) return;
+    char line[TODO_TEXT_LEN + 8];
+    todo_count = 0;
+    while (fgets(line, sizeof(line), f) && todo_count < MAX_TODOS) {
+        // Parse "- [x] text" or "- [ ] text"
+        if (line[0] != '-' || line[1] != ' ' || line[2] != '[') continue;
+        char checked = line[3];
+        if (line[4] != ']' || line[5] != ' ') continue;
+        todos[todo_count].completed = (checked == 'x' || checked == 'X') ? nk_true : nk_false;
+        char* text = line + 6;
+        size_t len = strlen(text);
+        while (len > 0 && (text[len - 1] == '\n' || text[len - 1] == '\r')) len--;
+        if (len == 0) continue;
+        text[len] = '\0';
+        strncpy(todos[todo_count].text, text, TODO_TEXT_LEN - 1);
+        todos[todo_count].text[TODO_TEXT_LEN - 1] = '\0';
+        todo_count++;
+    }
+    fclose(f);
+}
+
 static void update_visibility(void) {
     for (int i = 0; i < MAX_TODOS; i++) {
         if (i >= todo_count) {
@@ -121,6 +156,7 @@ static void on_todo_changed(nk_console* widget, void* user_data) {
     NK_UNUSED(widget);
     NK_UNUSED(user_data);
     update_visibility();
+    save_todos();
 }
 
 static void on_add_todo(nk_console* btn, void* user_data) {
@@ -132,6 +168,7 @@ static void on_add_todo(nk_console* btn, void* user_data) {
         todo_count++;
         memset(new_todo_buffer, 0, sizeof(new_todo_buffer));
         update_visibility();
+        save_todos();
     }
 }
 
@@ -160,6 +197,7 @@ static void on_clear_completed(nk_console* btn, void* user_data) {
     }
     todo_count = new_count;
     update_visibility();
+    save_todos();
 }
 
 static void setup_ui(void) {
@@ -203,7 +241,9 @@ int main() {
     nk_console_set_gamepads(console, &gamepads);
 
     // Initialize TodoMVC and build the UI
+    load_todos();
     setup_ui();
+    update_visibility();
 
     #if defined(PLATFORM_WEB)
         emscripten_set_main_loop(UpdateDrawFrame, 0, 1);
